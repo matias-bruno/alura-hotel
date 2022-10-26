@@ -1,5 +1,7 @@
 package views;
 
+import controllers.HuespedController;
+import controllers.ReservaController;
 import java.awt.EventQueue;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -24,6 +26,8 @@ import javax.swing.ListSelectionModel;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import models.Huesped;
+import models.Reserva;
 
 @SuppressWarnings("serial")
 public class Busqueda extends JFrame {
@@ -37,6 +41,10 @@ public class Busqueda extends JFrame {
 	private JLabel labelAtras;
 	private JLabel labelExit;
 	int xMouse, yMouse;
+        
+        // Una instancia de controlador para cada entidad
+        private HuespedController huespedController;
+        private ReservaController reservaController;
 
 	/**
 	 * Launch the application.
@@ -88,8 +96,9 @@ public class Busqueda extends JFrame {
 		panel.setBounds(20, 169, 865, 328);
 		contentPane.add(panel);
 
-		
-		
+		// Se crean las instancias de los controladores
+                reservaController = new ReservaController();
+                huespedController = new HuespedController();
 		
 		tbReservas = new JTable();
 		tbReservas.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -102,6 +111,8 @@ public class Busqueda extends JFrame {
 		modelo.addColumn("Valor");
 		modelo.addColumn("Forma de Pago");
 		
+                // Se carga la tabla de reservas
+                cargarTablaReservas();
 		
 		tbHuespedes = new JTable();
 		tbHuespedes.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -115,6 +126,9 @@ public class Busqueda extends JFrame {
 		modeloH.addColumn("Nacionalidad");
 		modeloH.addColumn("Telefono");
 		modeloH.addColumn("Numero de Reserva");
+                
+                // Se carga la tabla de huespedes
+                cargarTablaHuespedes();
 		
 		JLabel lblNewLabel_2 = new JLabel("");
 		lblNewLabel_2.setIcon(new ImageIcon(Busqueda.class.getResource("/imagenes/Ha-100px.png")));
@@ -258,14 +272,44 @@ public class Busqueda extends JFrame {
 	}
 	
 //Código que permite mover la ventana por la pantalla según la posición de "x" y "y"
-	 private void headerMousePressed(java.awt.event.MouseEvent evt) {
+            private void headerMousePressed(java.awt.event.MouseEvent evt) {
 	        xMouse = evt.getX();
 	        yMouse = evt.getY();
-	    }
+            }
 
 	    private void headerMouseDragged(java.awt.event.MouseEvent evt) {
 	        int x = evt.getXOnScreen();
 	        int y = evt.getYOnScreen();
 	        this.setLocation(x - xMouse, y - yMouse);
-}
+            }
+            
+            // Métodos para cargar las tablas
+            
+            private void cargarTablaReservas() {
+                List<Reserva> reservas = this.reservaController.listar();
+
+                reservas.forEach(reserva -> modelo.addRow(
+                        new Object[] {
+                                reserva.getId(),
+                                reserva.getFechaEntrada(),
+                                reserva.getFechaSalida(),
+                                reserva.getValor(),
+                                reserva.getFormaPago()
+                        }));
+            }
+    
+            private void cargarTablaHuespedes() {
+                List<Huesped> huespedes = this.huespedController.listar();
+
+                huespedes.forEach(huesped -> modeloH.addRow(
+                        new Object[] {
+                                huesped.getId(),
+                                huesped.getNombre(),
+                                huesped.getApellido(),
+                                huesped.getFechaNacimiento(),
+                                huesped.getNacionalidad(),
+                                huesped.getTelefono(),
+                                huesped.getReservaId()
+                        }));
+            }
 }
