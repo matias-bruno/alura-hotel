@@ -26,6 +26,7 @@ import javax.swing.ListSelectionModel;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import javax.swing.JOptionPane;
 import models.Huesped;
 import models.Reserva;
 
@@ -269,6 +270,14 @@ public class Busqueda extends JFrame {
 		lblEliminar.setBounds(0, 0, 122, 35);
 		btnEliminar.add(lblEliminar);
 		setResizable(false);
+                
+                btnEliminar.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseClicked(MouseEvent e) {
+                        // Separada la lógica de eliminar registro en un solo método
+                        eliminar(panel);
+                    }
+                });
 	}
 	
 //Código que permite mover la ventana por la pantalla según la posición de "x" y "y"
@@ -311,5 +320,42 @@ public class Busqueda extends JFrame {
                                 huesped.getTelefono(),
                                 huesped.getReservaId()
                         }));
+            }
+            
+            private boolean tieneFilaElegida(JTable tabla) {
+                return tabla.getSelectedRowCount() != 0 && tabla.getSelectedColumnCount() != 0;
+            }
+    
+            private void eliminar(JTabbedPane panel) {
+                JTable tabla = (JTable)panel.getSelectedComponent();
+
+                if(!tieneFilaElegida(tabla)) {
+                    JOptionPane.showMessageDialog(null, "No hay filas seleccionadas.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                int index = panel.getSelectedIndex();
+
+                if(index == 0) {
+                    // La pestaña de reservas
+                    Integer id = Integer.valueOf(modelo.getValueAt(tabla.getSelectedRow(), 0).toString());
+
+                    Integer filasModificadas = reservaController.eliminar(id);
+
+                    modelo.removeRow(tabla.getSelectedRow());
+
+                     JOptionPane.showMessageDialog(null,
+                            String.format("%d item eliminado con éxito!", filasModificadas));
+                } else {
+                     // La pestaña de huespedes
+                    Integer id = Integer.valueOf(modeloH.getValueAt(tabla.getSelectedRow(), 0).toString());
+
+                    Integer filasModificadas = huespedController.eliminar(id);
+
+                    modeloH.removeRow(tabla.getSelectedRow());
+
+                   JOptionPane.showMessageDialog(null,
+                            String.format("%d item eliminado con éxito!", filasModificadas));
+                }
             }
 }
