@@ -26,6 +26,9 @@ import javax.swing.ListSelectionModel;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import javax.swing.JOptionPane;
 import models.Huesped;
 import models.Reserva;
@@ -242,6 +245,7 @@ public class Busqueda extends JFrame {
 		lblBuscar.setForeground(Color.WHITE);
 		lblBuscar.setFont(new Font("Roboto", Font.PLAIN, 18));
 		
+                // Botón Editar
 		JPanel btnEditar = new JPanel();
 		btnEditar.setLayout(null);
 		btnEditar.setBackground(new Color(12, 138, 199));
@@ -255,7 +259,21 @@ public class Busqueda extends JFrame {
 		lblEditar.setFont(new Font("Roboto", Font.PLAIN, 18));
 		lblEditar.setBounds(0, 0, 122, 35);
 		btnEditar.add(lblEditar);
+                
+                btnEditar.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseClicked(MouseEvent e) {
+                        // Separada la lógica de edición en un solo método
+                        modificar(panel);
+                        // Se muestran los datos actualizados
+                        limpiarTabla(modelo);
+                        limpiarTabla(modeloH);
+                        cargarTablaHuespedes();
+                        cargarTablaReservas();
+                    }
+                });
 		
+                // Botón Eliminar
 		JPanel btnEliminar = new JPanel();
 		btnEliminar.setLayout(null);
 		btnEliminar.setBackground(new Color(12, 138, 199));
@@ -357,5 +375,60 @@ public class Busqueda extends JFrame {
                    JOptionPane.showMessageDialog(null,
                             String.format("%d item eliminado con éxito!", filasModificadas));
                 }
+            }
+            private void modificar(JTabbedPane panel) {
+                JTable tabla = (JTable)panel.getSelectedComponent();
+
+                if(!tieneFilaElegida(tabla)) {
+                    JOptionPane.showMessageDialog(null, "No hay filas seleccionadas.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                int index = panel.getSelectedIndex();
+
+                if(index == 0) {
+                    // la pestaña de reservas
+                    Integer id = Integer.valueOf(modelo.getValueAt(tabla.getSelectedRow(), 0).toString());
+                    String fechaEntrada = modelo.getValueAt(tabla.getSelectedRow(), 1).toString();
+                    String fechaSalida = modelo.getValueAt(tabla.getSelectedRow(), 2).toString();
+                    //Integer valor = Integer.valueOf(modelo.getValueAt(tabla.getSelectedRow(), 3).toString());
+
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                    Integer valor = 0;
+
+                    try {
+                        Date fecha1 = sdf.parse(fechaEntrada);
+                        Date fecha2 = sdf.parse(fechaSalida);
+                        if (fecha1 != null && fecha2 != null) {
+                            valor = Reserva.precioTotal(fecha1, fecha2);
+                        }
+                    } catch (ParseException ex) {
+                        throw new RuntimeException(ex);
+                    }
+
+                    String formaDePago = modelo.getValueAt(tabla.getSelectedRow(), 4).toString();
+
+                    Integer filasModificadas = reservaController.modificar(id, fechaEntrada, fechaSalida, valor, formaDePago);
+
+                     JOptionPane.showMessageDialog(null,
+                            String.format("%d item modificado con éxito!", filasModificadas));
+                } else {
+                    // La pestaña de huespedes
+                    Integer id = Integer.valueOf(modeloH.getValueAt(tabla.getSelectedRow(), 0).toString());
+                    String nombre = modeloH.getValueAt(tabla.getSelectedRow(), 1).toString();
+                    String apellido = modeloH.getValueAt(tabla.getSelectedRow(), 2).toString();
+                    String fechaNacimiento = modeloH.getValueAt(tabla.getSelectedRow(), 3).toString();
+                    String nacionalidad = modeloH.getValueAt(tabla.getSelectedRow(), 4).toString();
+                    String telefono = modeloH.getValueAt(tabla.getSelectedRow(), 5).toString();
+                    Integer reservaId = Integer.valueOf(modeloH.getValueAt(tabla.getSelectedRow(), 6).toString());
+
+                    Integer filasModificadas = huespedController.modificar(id, nombre, apellido, fechaNacimiento, nacionalidad, telefono, reservaId);
+
+                   JOptionPane.showMessageDialog(null,
+                            String.format("%d item modificado con éxito!", filasModificadas));
+                }
+            }
+            private void limpiarTabla(DefaultTableModel modelo) {
+                modelo.getDataVector().clear();
             }
 }
