@@ -11,6 +11,7 @@ import javax.swing.ImageIcon;
 import java.awt.Color;
 import javax.swing.JTextField;
 import com.toedter.calendar.JDateChooser;
+import controllers.ReservaController;
 import java.awt.Font;
 import javax.swing.JComboBox;
 import javax.swing.DefaultComboBoxModel;
@@ -21,9 +22,12 @@ import java.awt.event.MouseMotionAdapter;
 import java.awt.Toolkit;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeEvent;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 import javax.swing.border.LineBorder;
+import models.Reserva;
 
 
 @SuppressWarnings("serial")
@@ -38,6 +42,9 @@ public class ReservasView extends JFrame {
 	private JLabel labelExit;
 	private JLabel lblValorSimbolo; 
 	private JLabel labelAtras;
+        
+        // Controlador para la Reserva
+        private ReservaController reservaController;
 
 	/**
 	 * Launch the application.
@@ -142,6 +149,13 @@ public class ReservasView extends JFrame {
 		txtFechaS.addPropertyChangeListener(new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
 //Activa el evento, después del usuario seleccionar las fechas se debe calcular el valor de la reserva
+                            Date fecha1 = ReservasView.txtFechaE.getDate();
+                            Date fecha2 = ReservasView.txtFechaS.getDate();
+                            if (fecha1 != null && fecha2 != null) {
+
+                                    Integer valor = Reserva.precioTotal(fecha1, fecha2);
+                                    txtValor.setText(String.valueOf(valor));
+                            }
 			}
 		});
 		txtFechaS.setDateFormatString("yyyy-MM-dd");
@@ -291,13 +305,30 @@ public class ReservasView extends JFrame {
 		separator_1.setBackground(SystemColor.textHighlight);
 		panel.add(separator_1);
 		
+                // Se crea la instancia de ReservaController
+                reservaController = new ReservaController();
+                
 		JPanel btnsiguiente = new JPanel();
 		btnsiguiente.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				if (ReservasView.txtFechaE.getDate() != null && ReservasView.txtFechaS.getDate() != null) {		
-					RegistroHuesped registro = new RegistroHuesped();
+                                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                                Date fecha1 = ReservasView.txtFechaE.getDate();
+                                Date fecha2 = ReservasView.txtFechaS.getDate();
+                                // La validación debería ser más completa, pero por ahora...
+				if (fecha1 != null && fecha2 != null && txtValor.getText().length() > 0) {
+                                        // Guardar la reserva
+                                        String strFecha1 = sdf.format(fecha1);
+                                        String strFecha2 = sdf.format(fecha2);
+                                        Integer valor = Integer.parseInt(txtValor.getText());
+                                        Integer formaDePago = txtFormaPago.getSelectedIndex();
+                                        Reserva reserva = new Reserva(strFecha1, strFecha2,valor, Reserva.formasDePago[formaDePago]);
+                                        reservaController.guardar(reserva);
+                                        
+                                        // Abrir el formulario de Registro, pasandole el id de la reserva
+					RegistroHuesped registro = new RegistroHuesped(reserva.getId());
 					registro.setVisible(true);
+                                        dispose();
 				} else {
 					JOptionPane.showMessageDialog(null, "Debes llenar todos los campos.");
 				}

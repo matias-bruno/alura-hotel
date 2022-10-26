@@ -7,6 +7,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.JTextField;
 import java.awt.Color;
 import com.toedter.calendar.JDateChooser;
+import controllers.HuespedController;
 import javax.swing.JComboBox;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JLabel;
@@ -22,8 +23,11 @@ import java.awt.event.MouseMotionAdapter;
 import java.text.Format;
 import java.awt.event.ActionEvent;
 import java.awt.Toolkit;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import javax.swing.SwingConstants;
 import javax.swing.JSeparator;
+import models.Huesped;
 
 @SuppressWarnings("serial")
 public class RegistroHuesped extends JFrame {
@@ -38,6 +42,9 @@ public class RegistroHuesped extends JFrame {
 	private JLabel labelExit;
 	private JLabel labelAtras;
 	int xMouse, yMouse;
+        
+        // Controlador para el Huesped
+        private HuespedController huespedController;
 
 	/**
 	 * Launch the application.
@@ -46,7 +53,8 @@ public class RegistroHuesped extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					RegistroHuesped frame = new RegistroHuesped();
+                                        // Esto no se ejecuta, porque no se empieza por este formulario
+					RegistroHuesped frame = new RegistroHuesped(-1);
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -58,7 +66,7 @@ public class RegistroHuesped extends JFrame {
 	/**
 	 * Create the frame.
 	 */
-	public RegistroHuesped() {
+	public RegistroHuesped(Integer nroReserva) {
 		
 		setIconImage(Toolkit.getDefaultToolkit().getImage(RegistroHuesped.class.getResource("/imagenes/lOGO-50PX.png")));
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -211,6 +219,10 @@ public class RegistroHuesped extends JFrame {
 		txtNreserva.setBackground(Color.WHITE);
 		txtNreserva.setBorder(javax.swing.BorderFactory.createEmptyBorder());
 		contentPane.add(txtNreserva);
+                
+                // Le agregamos el número de la reserva y hacemos que no se pueda editar
+                txtNreserva.setText(String.valueOf(nroReserva));
+                txtNreserva.setEditable(false);
 		
 		JSeparator separator_1_2 = new JSeparator();
 		separator_1_2.setBounds(560, 170, 289, 2);
@@ -247,12 +259,40 @@ public class RegistroHuesped extends JFrame {
 		separator_1_2_5.setForeground(new Color(12, 138, 199));
 		separator_1_2_5.setBackground(new Color(12, 138, 199));
 		contentPane.add(separator_1_2_5);
+                
+                // Se crea la instancia de HuespedController
+                huespedController = new HuespedController();
 		
 		JPanel btnguardar = new JPanel();
 		btnguardar.setBounds(723, 560, 122, 35);
 		btnguardar.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
+                            // Obtener datos del formulario
+                            String nombre = txtNombre.getText();
+                            String apellido = txtApellido.getText();
+                            
+                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                            Date fechaN = txtFechaN.getDate();
+                            String strFechaNacimiento = fechaN != null ? sdf.format(fechaN) : "";
+                            
+                            String nacionalidad = txtNacionalidad.getSelectedItem().toString();
+                            String telefono = txtTelefono.getText();
+                            
+                            // Por ahora solo se valida que no estén vacios los campos
+                            if(nombre.length() > 0 && apellido.length() > 0 && strFechaNacimiento.length() > 0 && 
+                               nacionalidad.length() > 0 && telefono.length() > 0 && nroReserva > 0) {
+                                // Se crea un hueped
+                                Huesped huesped = new Huesped(nombre, apellido, strFechaNacimiento, nacionalidad, telefono, nroReserva);
+                                // Se intenta guardar
+                                huespedController.guardar(huesped);
+                                // Cerrar la ventana del formulario y mostrar listados de reservas y huespedes
+                                Busqueda busqueda = new Busqueda();
+				busqueda.setVisible(true);
+				dispose();
+                            } else {
+                                    JOptionPane.showMessageDialog(null, "Debes llenar todos los campos.");
+                            }
 			}
 		});
 		btnguardar.setLayout(null);
